@@ -18,8 +18,9 @@ You can download the latest pre-compiled `.exe` from the [Releases Page](../../r
 ## ☕ Support the Project
 
 This project is free and open source. If it helps your stream, consider buying me a coffee!
-* **Patreon:** [LINK TO PATREON]
-* **Ko-fi:** [LINK TO KO-FI]
+* **Patreon:** https://www.patreon.com/cw/Zakypew
+* **Ko-fi:** Ko-fi.com/ZakyPew
+
 
 ## 🛠️ How to Run from Source
 
