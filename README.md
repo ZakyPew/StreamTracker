@@ -2,7 +2,10 @@
 
 A dynamic, automated Steam Achievement Tracker for OBS Studio.
 It runs locally on your PC, scans your active game, and auto-themes the overlay to match the game's artwork.
-<img width="250" height="250" alt="image" src="https://github.com/user-attachments/assets/c19bbacf-fdd4-4f0c-927c-014d25a706cf" />
+
+<p align="center">
+<img width="300" height="300" alt="StreamTracker Logo" src="https://github.com/user-attachments/assets/c19bbacf-fdd4-4f0c-927c-014d25a706cf">
+</p>
 
 ## ✨ Features
 
