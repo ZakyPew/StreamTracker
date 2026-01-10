@@ -24,17 +24,19 @@ A dynamic, automated Steam Achievement Tracker for OBS Studio. It runs locally o
 ## 📸 Screenshots
 
 **Standard Overlay** 
+<br></br>
 <img width="759" height="161" alt="image" src="https://github.com/user-attachments/assets/27734f7c-cbd4-4e33-952a-51a80e808bb0" />
 
 <img width="728" height="170" alt="image" src="https://github.com/user-attachments/assets/7eb48a0c-866d-4543-9250-67a52443faac" />
 
 
 **Vertical Mode**
-
+<br></br>
 <img width="369" height="279" alt="image" src="https://github.com/user-attachments/assets/e44b8069-8aec-4793-8156-56aeb1c2839e" />
 
 
 **Control Dock**
+<br></br>
 <img width="456" height="852" alt="image" src="https://github.com/user-attachments/assets/ef6eebe3-5f4a-4b99-be55-bf879b352c90" />
 
 
