@@ -1,0 +1,29 @@
+--- Security: NEVER upload these ---
+
+config.json
+secrets.py
+.env
+
+--- Python Clutter ---
+
+pycache/
+*.py[cod]
+*$py.class
+
+--- Build Artifacts (Too big for code repo) ---
+
+build/
+dist/
+*.spec
+*.exe
+
+--- Virtual Environments ---
+
+venv/
+env/
+.venv/
+
+--- IDE Settings ---
+
+.vscode/
+.idea/

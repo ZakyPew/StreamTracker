@@ -1,0 +1,335 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <style>
+        :root { --accent: #66c0f4; --bg: rgba(23, 26, 33, 0.98); --bg-image: none; }
+        body { font-family: 'Segoe UI', sans-serif; margin: 0; padding: 20px; color: white; background: transparent; }
+        
+        /* LOADING & SETUP */
+        #loading-screen { position: fixed; top: 0; left: 0; width: 100%; height: 100vh; background: #1b2838; color: #888; display: flex; flex-direction: column; justify-content: center; align-items: center; z-index: 9999; }
+        .setup-container { display: flex; justify-content: center; align-items: center; height: 100vh; background: #1b2838; position: fixed; top: 0; left: 0; width: 100%; z-index: 999; }
+        .setup-card { background: rgba(23, 26, 33, 0.95); padding: 40px; border-radius: 12px; border: 1px solid var(--accent); width: 400px; }
+        h2 { color: var(--accent); text-align: center; }
+        input { width: 92%; padding: 12px; margin: 8px 0 20px 0; background: #000; border: 1px solid #333; color: white; border-radius: 6px; }
+        button { flex: 1; padding: 12px; font-weight: bold; border-radius: 6px; cursor: pointer; border: none; }
+        .test-btn { background: #333; color: white; }
+        .save-btn { background: var(--accent); color: white; opacity: 0.5; pointer-events: none; }
+        .active-btn { opacity: 1; pointer-events: auto; }
+        .btn-group { display: flex; gap: 10px; }
+        #test-status { font-size: 13px; margin-top: 15px; text-align: center; color: #aaa; }
+
+        /* FOOTER FOR SETUP */
+        .setup-footer { margin-top: 20px; padding-top: 15px; border-top: 1px solid rgba(255,255,255,0.1); text-align: center; font-size: 11px; color: #666; }
+        .setup-footer a { color: var(--accent); text-decoration: none; font-weight: bold; }
+        .setup-footer a:hover { text-decoration: underline; }
+
+        /* HELP TEXT STYLES */
+        .help-section { margin-top: 25px; padding-top: 20px; border-top: 1px solid rgba(255,255,255,0.1); font-size: 13px; color: #aaa; line-height: 1.6; }
+        .help-section a { color: var(--accent); text-decoration: none; font-weight: bold; }
+        .help-section a:hover { text-decoration: underline; }
+
+        /* TRACKER UI */
+        .card {
+            display: flex; align-items: center; gap: 24px;
+            background: rgba(23, 26, 33, 0.85);
+            padding: 24px 36px; border-radius: 16px;
+            border-bottom: 5px solid var(--accent);
+            box-shadow: 0 12px 40px rgba(0,0,0,0.7);
+            width: fit-content; margin-top: 20px;
+            transition: border-color 0.5s ease;
+            position: relative;
+            overflow: hidden;
+            z-index: 1;
+            min-height: 100px; /* Prevent collapse during flash */
+        }
+        
+        .card::before {
+            content: ""; position: absolute; top: 0; left: 0; right: 0; bottom: 0;
+            background-image: var(--bg-image); background-size: cover; background-position: center;
+            filter: blur(3px) brightness(0.5); z-index: -1;
+        }
+
+        .vertical-mode .card {
+            flex-direction: column; align-items: flex-start;
+            width: 300px; padding: 30px;
+            border-bottom: none; border-left: 8px solid var(--accent);
+        }
+        .vertical-mode .separator { display: none; }
+        .vertical-mode .tray { flex-wrap: wrap; margin-top: 15px; justify-content: center; }
+
+        .title { font-weight: 900; font-size: 26px; color: white; text-transform: uppercase; margin: 0; text-shadow: 0 2px 5px rgba(0,0,0,0.5); line-height: 1.1; }
+        .row-meta { display: flex; align-items: center; gap: 15px; margin: 6px 0 14px 0; }
+        .stats { font-size: 14px; color: #ddd; font-weight: bold; }
+        .timer { font-size: 12px; color: white; font-weight: 800; background: var(--accent); padding: 3px 8px; border-radius: 4px; box-shadow: 0 2px 5px rgba(0,0,0,0.3); }
+        .session-count { font-size: 12px; color: #4caf50; font-weight: 800; text-shadow: 0 1px 2px black; margin-left: 5px; opacity: 0.9; }
+        
+        .bar-bg { width: 100%; height: 10px; background: rgba(255,255,255,0.2); border-radius: 5px; overflow: hidden; }
+        .bar-fill { height: 100%; background: var(--accent); transition: width 2s ease; box-shadow: 0 0 15px var(--accent); }
+        
+        /* CONTENT LAYOUT */
+        .content-block { display: flex; flex-direction: column; justify-content: center; align-items: center; flex-grow: 1; min-height: 80px; }
+        .tray { display: flex; gap: 10px; margin-top: 10px; justify-content: center; }
+        .icon { width: 45px; height: 45px; border-radius: 6px; border: 1px solid rgba(255,255,255,0.3); }
+        
+        .avatar { width: 70px; height: 70px; border-radius: 50%; border: 3px solid var(--accent); background: #000; }
+        .platinum-mode { border-color: #e5e4e2 !important; box-shadow: 0 0 30px rgba(229, 228, 226, 0.4); }
+
+        .hunter-box { display: flex; align-items: center; gap: 15px; background: rgba(0,0,0,0.4); padding: 12px; border-radius: 8px; border: 1px solid rgba(255,255,255,0.2); position: relative; overflow: hidden; min-width: 200px; box-sizing: border-box; }
+        .vertical-mode .hunter-box { width: 100%; margin-top: 15px; }
+        .hunter-box::before { content: ''; position: absolute; left: 0; top: 0; bottom: 0; width: 4px; background: var(--rarity-color, #aaa); }
+        .hunter-icon { width: 48px; height: 48px; filter: grayscale(100%) contrast(1.2); opacity: 0.8; border-radius: 4px; border: 1px solid rgba(255,255,255,0.1); }
+        .hunter-label { font-size: 10px; color: var(--rarity-color, var(--accent)); font-weight: 800; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 3px; display: flex; align-items: center; gap: 6px; }
+        .hunter-val { color: #fff; opacity: 0.6; font-weight: normal; font-size: 10px; }
+        .hunter-name { font-size: 14px; font-weight: bold; color: white; text-shadow: 0 1px 2px rgba(0,0,0,0.8); }
+        .hunter-desc { font-size: 11px; color: #ccc; max-width: 220px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        .vertical-mode .hunter-desc { max-width: 180px; }
+
+        .last-unlock-box { margin-bottom: 5px; display: flex; flex-direction: column; align-items: center; text-align: center; width: 100%; }
+        .lu-label { font-size: 10px; color: var(--accent); font-weight: 800; letter-spacing: 1px; margin-bottom: 2px; text-transform: uppercase; }
+        .lu-name { font-size: 16px; font-weight: 900; color: white; text-shadow: 0 1px 2px black; letter-spacing: 0.5px; }
+        .lu-desc { display: none; }
+        .rare-unlock .lu-label { color: #ffb74d; }
+        .rare-unlock .lu-name { color: #fff5e6; text-shadow: 0 0 10px #ffb74d; }
+
+        /* FLASH OVERLAY (The Console Pop Animation) */
+        #flash-overlay {
+            position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(23, 26, 33, 0.98); /* Almost opaque to cover tray */
+            display: flex; flex-direction: column; justify-content: center; align-items: center;
+            opacity: 0; pointer-events: none; transition: opacity 0.3s ease;
+            z-index: 10; border-radius: 16px;
+        }
+        #flash-overlay.show { opacity: 1; pointer-events: auto; }
+        
+        .flash-icon { 
+            width: 80px; height: 80px; border-radius: 12px; 
+            border: 3px solid var(--accent); 
+            box-shadow: 0 0 30px var(--accent);
+            transform: scale(0.5); 
+            transition: transform 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            margin-bottom: 10px;
+        }
+        #flash-overlay.show .flash-icon { transform: scale(1); }
+
+        .flash-label { font-size: 14px; color: var(--accent); font-weight: 800; letter-spacing: 2px; text-transform: uppercase; margin-bottom: 5px; animation: slideUp 0.4s ease-out; }
+        .flash-name { font-size: 20px; font-weight: 900; color: white; text-shadow: 0 2px 5px black; text-align: center; animation: slideUp 0.5s ease-out; }
+        
+        @keyframes slideUp { from { transform: translateY(20px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
+    </style>
+</head>
+<body>
+    <div id="loading-screen">
+        <h2 style="color:#66c0f4; margin-bottom:10px;">Stream Tracker</h2>
+        <div id="loading-text" style="font-size:12px;">Initializing...</div>
+    </div>
+
+    <div id="setup-screen" class="setup-container" style="display: none;">
+        <div class="setup-card">
+            <h2 style="color:var(--accent); text-align:center;">Tracker Setup</h2>
+            <input id="key" type="password" placeholder="Steam Web API Key">
+            <input id="id" placeholder="Steam 64-Bit ID">
+            <div class="btn-group">
+                <button class="test-btn" onclick="testConnection()">TEST CONNECTION</button>
+                <button id="save-btn" class="save-btn" onclick="saveSettings()">SAVE & LAUNCH</button>
+            </div>
+            <div id="test-status"></div>
+            <!-- HELP SECTION -->
+            <div class="help-section">
+                <p><strong>1. Get Steam API Key:</strong> <a href="https://steamcommunity.com/dev/apikey" target="_blank">Click Here</a><br>
+                (Use 'localhost' for Domain Name)</p>
+                <p><strong>2. Get Steam ID:</strong> Go to your Profile > Right Click > Copy Page URL > The 17-digit number at the end.</p>
+            </div>
+            <div class="setup-footer">v1.4 • Powered by <a href="https://linktr.ee/zakypew" target="_blank">ZakyPew</a></div>
+        </div>
+    </div>
+
+    <audio id="unlock-sound" src="./assets/unlock.mp3"></audio>
+    <div id="tracker-ui" style="display:none;"></div>
+
+    <script>
+        const params = new URLSearchParams(window.location.search);
+        if (params.get("mode") === "vertical") document.body.classList.add("vertical-mode");
+        const DEFAULT_AVATAR = "https://avatars.steamstatic.com/fef49e7fa7e1997310d705b2a6158ff8dc1cdfeb_full.jpg";
+        let lastStats = "";
+
+        async function testConnection() {
+            const api_key = document.getElementById('key').value;
+            const steam_id = document.getElementById('id').value;
+            const statusDiv = document.getElementById('test-status');
+            statusDiv.innerText = "Connecting...";
+            try {
+                const res = await fetch('http://localhost:5000/test_connection', {
+                    method: 'POST', headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({api_key, steam_id})
+                });
+                const data = await res.json();
+                if (data.status === "success") {
+                    statusDiv.style.color = "#66c0f4";
+                    statusDiv.innerText = "Verified: " + data.persona;
+                    document.getElementById('save-btn').classList.add('active-btn');
+                } else {
+                    statusDiv.style.color = "#ff4444";
+                    statusDiv.innerText = data.message;
+                }
+            } catch(e) { statusDiv.innerText = "Backend Offline"; }
+        }
+
+        async function saveSettings() {
+            const api_key = document.getElementById('key').value;
+            const steam_id = document.getElementById('id').value;
+            await fetch('http://localhost:5000/settings', {
+                method: 'POST', headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({api_key, steam_id})
+            });
+            window.location.reload();
+        }
+
+        // --- NEW: POP-UP ANIMATION FUNCTION ---
+        function triggerFlash(icon, name) {
+            const flash = document.getElementById('flash-overlay');
+            if(flash) {
+                document.getElementById('flash-img').src = icon;
+                document.getElementById('flash-name').innerText = name;
+                flash.classList.add('show');
+                // Auto-hide after 5 seconds
+                setTimeout(() => { flash.classList.remove('show'); }, 5000);
+            }
+        }
+
+        async function refresh() {
+            try {
+                const res = await fetch('http://localhost:5000/data');
+                const data = await res.json();
+                
+                const loading = document.getElementById('loading-screen');
+                const setup = document.getElementById('setup-screen');
+                const ui = document.getElementById('tracker-ui');
+
+                if (data.status === "error") {
+                    loading.style.display = 'flex';
+                    document.getElementById('loading-text').innerText = data.message || "Connecting...";
+                    return; 
+                }
+                if (data.status) loading.style.display = 'none';
+
+                if (data.status === "setup_required") {
+                    setup.style.display = 'flex'; ui.style.display = 'none';
+                } else {
+                    setup.style.display = 'none'; ui.style.display = 'block';
+                    
+                    if (data.status === "active") {
+                        document.documentElement.style.setProperty('--accent', data.theme);
+                        const bgUrl = data.game_art ? `url('${data.game_art}')` : 'none';
+                        document.documentElement.style.setProperty('--bg-image', bgUrl);
+                        
+                        // NEW UNLOCK DETECTION
+                        if (data.stats !== lastStats) {
+                            if (lastStats !== "" && data.recent && data.recent.length > 0) {
+                                // Latest item is last in list
+                                const latest = data.recent[data.recent.length - 1];
+                                triggerFlash(latest.icon, latest.name);
+                                
+                                if (data.play_sound) {
+                                    const audio = document.getElementById('unlock-sound');
+                                    audio.volume = (data.volume || 50) / 100;
+                                    audio.play().catch(e => console.log("Audio blocked"));
+                                }
+                            }
+                            lastStats = data.stats;
+                        }
+
+                        const isPlat = data.is_100 ? "platinum-mode" : "";
+                        let contentHTML = "";
+                        
+                        if (data.hunter_target) {
+                            const r = data.hunter_target.rarity;
+                            let rColor = "#a3a3a3"; 
+                            let rText = "COMMON";
+                            if (r < 1) { rColor = "#bd93f9"; rText = "LEGENDARY"; }
+                            else if (r < 10) { rColor = "#ffb74d"; rText = "ULTRA RARE"; }
+                            else if (r < 30) { rColor = "#4fc3f7"; rText = "RARE"; }
+
+                            contentHTML = `
+                                <div class="hunter-box" style="--rarity-color: ${rColor};">
+                                    <img src="${data.hunter_target.icon}" class="hunter-icon">
+                                    <div>
+                                        <div class="hunter-label">
+                                            <span>🎯 ${rText}</span>
+                                            <span class="hunter-val">${r}% Global</span>
+                                        </div>
+                                        <div class="hunter-name">${data.hunter_target.name}</div>
+                                        <div class="hunter-desc">${data.hunter_target.desc}</div>
+                                    </div>
+                                </div>`;
+                        } else {
+                            const recent = data.recent || [];
+                            const lastUnlock = recent.length > 0 ? recent[recent.length - 1] : null;
+                            let lastUnlockHTML = "";
+                            
+                            if (lastUnlock) {
+                                const isRare = lastUnlock.rarity < 10;
+                                const rareClass = isRare ? "rare-unlock" : "";
+                                lastUnlockHTML = `
+                                    <div class="last-unlock-box ${rareClass}">
+                                        <div class="lu-label">${isRare ? "★ ULTRA RARE UNLOCK ★" : "LATEST UNLOCK"}</div>
+                                        <div class="lu-name">${lastUnlock.name}</div>
+                                    </div>`;
+                            }
+                            const reversedTray = [...recent].reverse();
+                            const trayHTML = `<div class="tray">${reversedTray.map(item => `<img src="${item.icon}" class="icon">`).join('')}</div>`;
+                            contentHTML = lastUnlockHTML + trayHTML;
+                        }
+
+                        let sessionHTML = "";
+                        if (data.session_unlocks > 0) {
+                            sessionHTML = `<span class="session-count">(+${data.session_unlocks})</span>`;
+                        }
+
+                        ui.innerHTML = `
+                            <div class="card ${isPlat}">
+                                <!-- THE FLASH OVERLAY IS HERE -->
+                                <div id="flash-overlay">
+                                    <img id="flash-img" class="flash-icon" src="">
+                                    <div class="flash-label">JUST UNLOCKED</div>
+                                    <div id="flash-name" class="flash-name"></div>
+                                </div>
+
+                                <div style="min-width: 260px; padding-right: 30px; border-right: 1px solid rgba(255,255,255,0.15);" class="info-block">
+                                    <p class="title">${data.game}</p>
+                                    <div class="row-meta">
+                                        <span class="stats">${data.stats} ACHIEVEMENTS</span>
+                                        <span class="timer">⏱ ${data.duration} ${sessionHTML}</span>
+                                    </div>
+                                    <div class="bar-bg"><div class="bar-fill" style="width: ${data.progress}%"></div></div>
+                                </div>
+                                <div class="separator" style="align-self: stretch; width:1px; background:rgba(255,255,255,0.15); margin:0 10px;"></div>
+                                <div class="content-block">
+                                    ${contentHTML}
+                                </div>
+                            </div>`;
+                    } else if (data.status === "standby") {
+                        document.documentElement.style.setProperty('--accent', "#66c0f4");
+                        document.documentElement.style.setProperty('--bg-image', 'none'); 
+                        const avatarSrc = data.avatar || DEFAULT_AVATAR;
+                        ui.innerHTML = `
+                            <div class="card">
+                                <img src="${avatarSrc}" class="avatar" onerror="this.src='${DEFAULT_AVATAR}'">
+                                <div style="min-width: 200px;">
+                                    <p class="title" style="font-size: 20px;">${data.persona}</p>
+                                    <div style="font-size: 10px; opacity:0.5; letter-spacing:1px; margin-top:5px; font-weight:bold;">READY TO TRACK</div>
+                                </div>
+                            </div>`;
+                    } else if (data.status === "hidden") {
+                        ui.innerHTML = "";
+                    }
+                }
+            } catch (e) {
+                document.getElementById('loading-screen').style.display = 'flex';
+                document.getElementById('loading-text').innerText = "Waiting for Backend (App.py)...";
+            }
+        }
+        setInterval(refresh, 2000);
+        refresh();
+    </script>
+</body>
+</html>
