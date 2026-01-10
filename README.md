@@ -2,7 +2,7 @@
 
 A dynamic, automated Steam Achievement Tracker for OBS Studio.
 It runs locally on your PC, scans your active game, and auto-themes the overlay to match the game's artwork.
-
+____________________________________________________________________________________________________________________
 ✨ Features
 
 🦎 Chameleon Theme: Automatically detects your game and changes overlay colors.
