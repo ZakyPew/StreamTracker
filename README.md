@@ -19,7 +19,7 @@ You can download the latest pre-compiled `.exe` from the [Releases Page](../../r
 
 This project is free and open source. If it helps your stream, consider buying me a coffee!
 * **Patreon:** https://www.patreon.com/cw/Zakypew
-* **Ko-fi:** Ko-fi.com/ZakyPew
+* **Ko-fi:** https://wwww.Ko-fi.com/ZakyPew
 
 
 ## 🛠️ How to Run from Source
