@@ -36,13 +36,12 @@ def load_config():
         "api_key": "", 
         "steam_id": "", 
         "show_standby": True, 
-        "play_sound": True,
-        "volume": 50,
+        "play_sound": True, 
+        "volume": 50, 
         "manual_id": "",
-        "theme_mode": "dynamic",
+        "theme_mode": "dynamic", 
         "custom_color": "#66c0f4",
-        "xbox_platform": "All",
-        "overrides": {},
+        "overrides": {}, 
         "pins": {}
     }
     if os.path.exists(CONFIG_FILE):
@@ -50,6 +49,7 @@ def load_config():
             try: 
                 saved = json.load(f)
                 defaults.update(saved)
+                # Return only keys that exist in defaults (cleans out old xbox keys)
                 return {k: saved.get(k, v) for k, v in defaults.items()}
             except: pass
     return defaults
@@ -127,13 +127,6 @@ def reset_settings():
     if os.path.exists(CONFIG_FILE): os.remove(CONFIG_FILE)
     return jsonify({"status": "success"})
 
-@app.route('/shutdown', methods=['POST'])
-def shutdown():
-    """Terminates the application immediately."""
-    # Force exit Python process
-    os._exit(0)
-    return jsonify({"status": "shutdown"})
-
 @app.route('/restart_session', methods=['POST'])
 def restart_session():
     global state
@@ -176,6 +169,12 @@ def set_pin():
     state['cached_response'] = None
     return jsonify({"status": "success"})
 
+@app.route('/shutdown', methods=['POST'])
+def shutdown():
+    """Terminates the application immediately."""
+    os._exit(0)
+    return jsonify({"status": "shutdown"})
+
 @app.route('/test_connection', methods=['POST'])
 def test_connection():
     data = request.json
@@ -215,7 +214,8 @@ def get_data():
             "volume": cfg.get('volume', 50)
         })
 
-    if not cfg['api_key'] or not cfg['steam_id']: return jsonify({"status": "setup_required"})
+    if not cfg['api_key'] or not cfg['steam_id']: 
+        return jsonify({"status": "setup_required"})
 
     # Detection Logic
     if cfg.get('manual_id'): active_appid = str(cfg['manual_id'])
@@ -232,14 +232,13 @@ def get_data():
         state['current_appid'] = None
         state['session_start'] = 0
 
-    # Cache Check (15s)
-    if state['cached_response'] and (now - state['last_api_update'] < 15):
+    # Cache Check (3s)
+    if state['cached_response'] and (now - state['last_api_update'] < 3):
         if state['cached_response']['status'] == "active":
             state['cached_response']['duration'] = format_duration(now - state['session_start'])
             state['cached_response']['play_sound'] = cfg.get('play_sound', True)
             state['cached_response']['volume'] = cfg.get('volume', 50)
             
-            # Hot update custom theme
             if cfg.get('theme_mode') == 'custom':
                 state['cached_response']['theme'] = cfg.get('custom_color') or '#66c0f4'
             elif 'steam_theme_cache' in state and active_appid:
@@ -308,7 +307,7 @@ def get_data():
             count = len(unlocked)
             percent = int((count / total) * 100) if total > 0 else 0
             
-            # Session Counter
+            # SESSION LOGIC
             if state['start_count'] == -1: state['start_count'] = count
             session_unlocks = max(0, count - state['start_count'])
             
@@ -361,5 +360,9 @@ def get_data():
         return jsonify({"status": "error", "message": "Connecting..."})
 
 if __name__ == '__main__':
-    # Browser launch disabled
+    # RESTORED: Check for config file existence to decide whether to open browser
+    if not os.path.exists(CONFIG_FILE):
+         print("First run detected. Opening setup...")
+         webbrowser.open("http://localhost:5000")
+         
     app.run(port=5000, debug=False, use_reloader=False)
