@@ -4,6 +4,11 @@
 
 A dynamic, automated Steam Achievement Tracker for OBS Studio. It runs locally on your PC, scans your active game, and auto-themes the overlay to match the game's artwork.
 
+
+**🎥 Installation Video**
+<div align="center">
+<a href="https://youtu.be/giiv7gTtkRo"><img width="500" height="500" alt="image" src="https://github.com/user-attachments/assets/372ab7e5-7ff7-4605-9c2e-7226ef65723e" /></a></div>
+
 ## 🚀 Features
 
 -   **🦎 Chameleon Theme:** Automatically detects your game via Steam and changes overlay colors to match the official artwork.
@@ -55,7 +60,7 @@ This project is free and open source. If it helps your stream, consider buying m
 
 ## 📦 Installation
 
-1.  Download **`StreamTracker_v1.5.zip`**.
+1.  Download **`StreamTracker_v1.5.zip`**. Check out the installation video https://youtu.be/giiv7gTtkRo
     
 2.  **Unzip** the folder to a permanent location (e.g., Documents/StreamTools).
     
