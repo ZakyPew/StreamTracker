@@ -38,7 +38,7 @@ def load_config():
         "show_standby": True, 
         "play_sound": True, 
         "volume": 50, 
-        "manual_id": "",
+        "manual_id": "", 
         "theme_mode": "dynamic", 
         "custom_color": "#66c0f4",
         "overrides": {}, 
@@ -48,8 +48,7 @@ def load_config():
         with open(CONFIG_FILE, 'r') as f:
             try: 
                 saved = json.load(f)
-                defaults.update(saved)
-                # Return only keys that exist in defaults (cleans out old xbox keys)
+                # Only keep relevant keys, filter out old Xbox junk
                 return {k: saved.get(k, v) for k, v in defaults.items()}
             except: pass
     return defaults
@@ -135,6 +134,12 @@ def restart_session():
     state['cached_response'] = None
     return jsonify({"status": "success"})
 
+@app.route('/shutdown', methods=['POST'])
+def shutdown():
+    """Terminates the application immediately."""
+    os._exit(0)
+    return jsonify({"status": "shutdown"})
+
 @app.route('/trigger_test', methods=['POST'])
 def trigger_test():
     global state
@@ -168,12 +173,6 @@ def set_pin():
     global state
     state['cached_response'] = None
     return jsonify({"status": "success"})
-
-@app.route('/shutdown', methods=['POST'])
-def shutdown():
-    """Terminates the application immediately."""
-    os._exit(0)
-    return jsonify({"status": "shutdown"})
 
 @app.route('/test_connection', methods=['POST'])
 def test_connection():
@@ -239,6 +238,7 @@ def get_data():
             state['cached_response']['play_sound'] = cfg.get('play_sound', True)
             state['cached_response']['volume'] = cfg.get('volume', 50)
             
+            # Hot update custom theme
             if cfg.get('theme_mode') == 'custom':
                 state['cached_response']['theme'] = cfg.get('custom_color') or '#66c0f4'
             elif 'steam_theme_cache' in state and active_appid:
@@ -360,7 +360,7 @@ def get_data():
         return jsonify({"status": "error", "message": "Connecting..."})
 
 if __name__ == '__main__':
-    # RESTORED: Check for config file existence to decide whether to open browser
+    # Launch browser only if config is missing (First Run)
     if not os.path.exists(CONFIG_FILE):
          print("First run detected. Opening setup...")
          webbrowser.open("http://localhost:5000")

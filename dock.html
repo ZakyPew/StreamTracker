@@ -67,12 +67,12 @@
         </div>
     </div>
 
-    <!-- AUDIO & THEME SETTINGS -->
+    <!-- SETTINGS -->
     <div class="section-box">
         <span class="section-title">Settings</span>
         
         <!-- Volume -->
-        <div style="display:flex; justify-content:space-between; font-size:11px; color:#bbb; margin-bottom:2px;">
+        <div style="display:flex; justify-content:space-between; font-size:11px; color:#bbb; margin-bottom:2px; margin-top:10px;">
             <span>Unlock Volume</span>
             <span id="vol-label">50%</span>
         </div>
@@ -133,12 +133,13 @@
         <input type="text" id="manual-id" placeholder="Manual App ID (e.g. 1245620)">
         <button onclick="saveManualID()">Force Load ID</button>
         <button onclick="restartSession()">🔄 Restart Session Timer</button>
-        <button onclick="fullReset()" class="danger-btn">⚠ Disconnect Account</button>
+        <button onclick="fullReset()" class="danger-btn">⚠ Reset Account / Keys</button>
+        <button onclick="shutdownApp()" class="danger-btn" style="background:#800000; margin-top: 5px;">❌ Quit Tracker</button>
     </div>
 
     <!-- FOOTER -->
     <div class="footer">
-        v1.4 • Powered by <a href="https://linktr.ee/zakypew" target="_blank">ZakyPew</a>
+        v1.6 • Powered by <a href="https://linktr.ee/zakypew" target="_blank">ZakyPew</a>
     </div>
 
     <script>
@@ -149,11 +150,10 @@
             const standby = document.getElementById('chk-standby').checked;
             const sound = document.getElementById('chk-sound').checked;
             const vol = document.getElementById('vol-slider').value;
-            
-            const mode = document.querySelector('input[name="theme_mode"]:checked').value;
+            const themeMode = document.querySelector('input[name="theme_mode"]:checked').value;
             const color = document.getElementById('custom-color').value;
             
-            document.getElementById('custom-color-box').style.display = (mode === 'custom') ? 'block' : 'none';
+            document.getElementById('custom-color-box').style.display = (themeMode === 'custom') ? 'block' : 'none';
 
             await fetch('http://localhost:5000/settings', {
                 method: 'POST', headers: {'Content-Type': 'application/json'},
@@ -161,7 +161,7 @@
                     show_standby: standby, 
                     play_sound: sound,
                     volume: parseInt(vol),
-                    theme_mode: mode,
+                    theme_mode: themeMode,
                     custom_color: color
                 })
             });
@@ -207,38 +207,47 @@
             setPin();
         }
 
+        async function restartSession() { await fetch('http://localhost:5000/restart_session', { method: 'POST' }); }
+        
+        async function fullReset() { 
+            if(confirm("Disconnect accounts and reset all keys?")) {
+                await fetch('http://localhost:5000/reset', { method: 'POST' }); 
+                document.body.innerHTML = "<h3 style='text-align:center;'>Reset Complete. Restart App.</h3>";
+            }
+        }
+        
+        async function shutdownApp() {
+            if(confirm("Are you sure you want to quit the tracker?")) {
+                await fetch('http://localhost:5000/shutdown', { method: 'POST' });
+                document.body.innerHTML = "<h3 style='text-align:center; color:#f44336; margin-top:50px;'>Tracker Stopped.</h3>";
+            }
+        }
+
         async function refresh() {
             try {
                 const res = await fetch('http://localhost:5000/data');
                 const data = await res.json();
-                
                 document.getElementById('status-text').innerText = "Online";
                 document.getElementById('status-text').style.color = "#4caf50";
 
                 if (data.status === "active") {
                     document.getElementById('game-val').innerText = data.game;
                     document.getElementById('timer-val').innerText = data.duration;
+                    if (data.session_unlocks > 0) document.getElementById('unlocks-val').innerText = `(+${data.session_unlocks})`;
+                    else document.getElementById('unlocks-val').innerText = "";
                     
-                    if (data.session_unlocks > 0) {
-                        document.getElementById('unlocks-val').innerText = `(+${data.session_unlocks})`;
-                    } else {
-                        document.getElementById('unlocks-val').innerText = "";
-                    }
-                    
-                    // Show Game Tools
                     document.getElementById('game-tools').style.display = "block";
 
-                    // Handle New Game Loaded logic
+                    // Populate/Refresh dropdown logic
                     if (data.appid !== currentAppID) {
                         currentAppID = data.appid;
                         document.getElementById('name-override').value = data.game;
                         loadedLockedList = false;
                     }
 
-                    // Populate Hunter Dropdown
                     if (!loadedLockedList && data.locked_list) {
                         const select = document.getElementById('lock-list');
-                        const currentVal = select.value; // preserve selection if just refreshing
+                        const currentVal = select.value; 
                         select.innerHTML = '<option value="">-- Select Target --</option>';
                         data.locked_list.forEach(a => {
                             const opt = document.createElement('option');
@@ -250,7 +259,6 @@
                         loadedLockedList = true;
                     }
                 } else {
-                    // Standby or Setup
                     document.getElementById('game-val').innerText = "Standby";
                     document.getElementById('timer-val').innerText = "---";
                     document.getElementById('unlocks-val').innerText = "";
@@ -262,9 +270,6 @@
                 document.getElementById('status-text').style.color = "#f44336";
             }
         }
-
-        async function restartSession() { await fetch('http://localhost:5000/restart_session', { method: 'POST' }); }
-        async function fullReset() { if(confirm("Disconnect Steam account?")) await fetch('http://localhost:5000/reset', { method: 'POST' }); }
         
         setInterval(refresh, 2000);
         refresh();
